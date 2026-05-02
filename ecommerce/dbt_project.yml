@@ -1,0 +1,33 @@
+name: "ecommerce"
+version: "1.0.0"
+
+profile: "ecommerce"
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+asset-paths: ["assets"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+on-run-start:
+  - "CREATE TABLE IF NOT EXISTS {{ target.schema }}.audit_log ( model_name STRING, run_timestamp TIMESTAMP )"
+
+models:
+  ecommerce:
+    +post-hook:
+      - "INSERT INTO {{ target.schema }}.audit_log VALUES ('{{ this }}', CURRENT_TIMESTAMP)"
+    +materialized: view
+    dim:
+      +materialized: table
+    src:
+      +materialized: ephemeral
+
+data_tests:
+  +store_failures: true
+  +schema: _test_failures
