@@ -1,0 +1,13 @@
+ecommerce/target/
+ecommerce/dbt_packages/
+ecommerce/logs/
+ecommerce/profiles.yml
+
+.venv/
+logs/
+.user.yml
+.DS_Store
+.vscode/
+
+**/__pycache__/
+*.pyc
