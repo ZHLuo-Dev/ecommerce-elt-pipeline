@@ -1,0 +1,118 @@
+models:
+  - name: dim_customers
+    description: Cleansed customer dimension table.
+    columns:
+      - name: customer_id
+        description: Primary key for the customer record.
+        data_tests:
+          - unique
+          - not_null
+
+      - name: customer_state
+        description: Customer state abbreviation.
+        data_tests:
+          - not_null
+
+  - name: dim_products
+    description: Cleansed product dimension with English category names.
+    columns:
+      - name: product_id
+        description: Primary key for the product.
+        data_tests:
+          - unique
+          - not_null
+
+      - name: product_category
+        description: '{{ doc("dim_products__product_category") }}'
+        data_tests:
+          - not_null
+
+  - name: dim_sellers
+    description: Cleansed seller dimension table.
+    columns:
+      - name: seller_id
+        description: Primary key for the seller.
+        data_tests:
+          - unique
+          - not_null
+
+      - name: seller_state
+        description: Seller state abbreviation.
+        data_tests:
+          - not_null
+
+  - name: fct_orders
+    description: Fact table containing order-level metrics with delivery and payment data.
+    data_tests:
+      - minimum_row_count:
+          arguments:
+            min_row_count: 50000
+          config:
+            severity: error
+    columns:
+      - name: order_key
+        description: Surrogate key for the order.
+        data_tests:
+          - unique
+          - not_null
+
+      - name: order_id
+        description: Original order identifier.
+        data_tests:
+          - not_null
+
+      - name: customer_id
+        description: References the customer dimension.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_customers')
+                field: customer_id
+
+      - name: order_status
+        description: Current status of the order.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['delivered', 'shipped', 'canceled', 'unavailable', 'invoiced', 'processing', 'created', 'approved']
+
+      - name: total_price
+        description: Total price of all items in the order.
+        data_tests:
+          - positive_values
+
+  - name: mart_seller_performance
+    description: Aggregated seller performance metrics.
+    columns:
+      - name: seller_id
+        data_tests:
+          - unique
+          - not_null
+
+      - name: avg_review_score
+        description: Average review score across all seller orders.
+
+  - name: mart_delivery_analysis
+    description: Order-level delivery performance with review scores.
+    data_tests:
+      - dbt_expectations.expect_table_row_count_to_equal_other_table:
+          arguments:
+            compare_model: ref('fct_orders')
+          config:
+            severity: warn
+    columns:
+      - name: review_score
+        data_tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              arguments:
+                min_value: 1
+                max_value: 5
+              config:
+                severity: warn
+
+      - name: delivery_status
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['late', 'on_time', 'not_delivered']

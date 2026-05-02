@@ -1,0 +1,28 @@
+sources:
+  - name: ecommerce
+    schema: raw
+    tables:
+      - name: orders
+        identifier: raw_orders
+        config:
+          loaded_at_field: order_purchase_timestamp
+          freshness:
+            warn_after: {count: 1, period: hour}
+
+      - name: order_items
+        identifier: raw_order_items
+
+      - name: customers
+        identifier: raw_customers
+
+      - name: products
+        identifier: raw_products
+
+      - name: sellers
+        identifier: raw_sellers
+
+      - name: reviews
+        identifier: raw_reviews
+
+      - name: payments
+        identifier: raw_payments
